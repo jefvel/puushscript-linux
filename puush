@@ -1,0 +1,81 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+#Puush Upload Script
+#
+#Usage:
+#   puush [-r] file
+#
+#   calling puush will capture whole screen and upload.
+#   -r captures region of screen
+#   file uploads file to puush.
+#
+#Dependencies:
+#   scrot
+#   curl
+#   notify-send
+#   xclip
+#
+
+keyfile=~/.puushkey
+up_file=/tmp/screenshot.png
+scrot_options="-q 90"
+temporary_file=false
+
+alias notify=notify-send
+
+if [[ ! -r $keyfile && -z $PUUSH_API_KEY ]]
+then
+    notify "  No Puush API Key found. Create a file named ~./puushkey and put it there."
+    exit
+fi
+
+if [[ -z $PUUSH_API_KEY ]]
+then
+    PUUSH_API_KEY=$(cat $keyfile)
+fi
+
+function upload_puush {
+    if ! [[ -r "$1" ]]
+    then
+        notify "  Unable to read input file."
+        exit
+    fi
+
+    notify "  Uploading... ($(($(stat -c%s "$1") / 1024)) KB)"
+
+    local result=$(curl "https://puush.me/api/up"\
+    -# -F "k=$PUUSH_API_KEY" -F "z=poop" -F "f=@$1")
+
+    res_code=$(echo $result | sed -E 's/^(.+),.+,.+,.+$/\1/')
+    res_url=$(echo $result | sed -E 's/^.+,(.+),.+,.+$/\1/')
+}
+
+if [[ $1 == "-r" ]]
+then
+    scrot -s $scrot_options $up_file
+    temporary_file=true
+elif ! [[ -z "$1" ]]
+then
+    up_file=$1
+else
+    scrot $scrot_options $up_file
+    temporary_file=true
+fi
+
+upload_puush $up_file
+
+if [[ $res_code == 0 ]]
+then
+    msg=" Upload Complete! | <a href='$res_url'>$res_url</a>"
+    echo -n $res_url | xclip -selection c
+else
+    msg=" Error Uploading File. Is your Puush API Key correct?"
+fi
+
+notify "$msg"
+
+if [[ $temporary_file == true ]]
+then
+    rm $up_file
+fi
+
