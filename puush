@@ -21,11 +21,9 @@ up_file=/tmp/screenshot.png
 scrot_options="-q 90"
 temporary_file=false
 
-alias notify=notify-send
-
 if [[ ! -r $keyfile && -z $PUUSH_API_KEY ]]
 then
-    notify "  No Puush API Key found. Create a file named ~./puushkey and put it there."
+    notify-send "  No Puush API Key found. Create a file named ~./puushkey and put it there."
     exit
 fi
 
@@ -37,11 +35,11 @@ fi
 function upload_puush {
     if ! [[ -r "$1" ]]
     then
-        notify "  Unable to read input file."
+        notify-send "  Unable to read input file."
         exit
     fi
 
-    nid=$(notify "  Uploading... [$(($(stat -c%s "$1") / 1024)) KB]")
+    nid=$(notify-send "  Uploading... [$(($(stat -c%s "$1") / 1024)) KB]")
 
     local result=$(curl "https://puush.me/api/up"\
     -# -F "k=$PUUSH_API_KEY" -F "z=i" -F "f=@$1")
@@ -72,7 +70,7 @@ else
     msg=" Error Uploading File. Is your Puush API Key correct?"
 fi
 
-notify "$msg" $nid
+notify-send "$msg" $nid
 
 if [[ $temporary_file == true ]]
 then
