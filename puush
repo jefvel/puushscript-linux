@@ -41,16 +41,16 @@ function upload_puush {
         exit
     fi
 
-    notify "  Uploading... ($(($(stat -c%s "$1") / 1024)) KB)"
+    nid=$(notify "  Uploading... [$(($(stat -c%s "$1") / 1024)) KB]")
 
     local result=$(curl "https://puush.me/api/up"\
-    -# -F "k=$PUUSH_API_KEY" -F "z=poop" -F "f=@$1")
+    -# -F "k=$PUUSH_API_KEY" -F "z=i" -F "f=@$1")
 
     res_code=$(echo $result | sed -E 's/^(.+),.+,.+,.+$/\1/')
     res_url=$(echo $result | sed -E 's/^.+,(.+),.+,.+$/\1/')
 }
 
-if [[ $1 == "-r" ]]
+if [[ $1 == "-r" || $1 == "r" ]]
 then
     scrot -s $scrot_options $up_file
     temporary_file=true
@@ -72,7 +72,7 @@ else
     msg=" Error Uploading File. Is your Puush API Key correct?"
 fi
 
-notify "$msg"
+notify "$msg" $nid
 
 if [[ $temporary_file == true ]]
 then
